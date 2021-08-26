@@ -20,17 +20,27 @@ function getRandomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function shuffleArray<T>(array: T[]): void {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 function doRandomize(groups: string, themes: string) {
-  const parsedGroups = groups.matchAll(groupRegex);
+  const parsedGroups = Array.from(groups.matchAll(groupRegex));
+  shuffleArray(parsedGroups);
+
   const parsedThemes = themes.split("\n");
+  const count: Record<string, number> = {};
 
   const groupsAlreadyAssigned: Record<string, Set<string>> = {};
 
   const results: string[] = [];
   let currentSet = [...parsedThemes];
   for (const group of parsedGroups) {
-    groupsAlreadyAssigned[group[0]] =
-      groupsAlreadyAssigned[group[0]] ?? new Set();
+    groupsAlreadyAssigned[group[1]] =
+      groupsAlreadyAssigned[group[1]] ?? new Set();
 
     if (currentSet.length === 0) currentSet = [...parsedThemes];
     let success = false;
@@ -40,17 +50,22 @@ function doRandomize(groups: string, themes: string) {
         1
       )[0];
 
-      if (!groupsAlreadyAssigned[group[0]].has(assigned)) success = true;
+      if (!groupsAlreadyAssigned[group[1]].has(assigned)) success = true;
       else {
         currentSet.push(assigned);
+        if (currentSet.length <= 2) {
+          currentSet = [...currentSet, ...parsedThemes];
+        }
         continue;
       }
 
       results.push(`${group[0]} ${assigned}`);
-      groupsAlreadyAssigned[group[0]].add(assigned);
+      groupsAlreadyAssigned[group[1]].add(assigned);
+      count[assigned] = (count[assigned] ?? 0) + 1;
     }
   }
-  return results.join("\n");
+  console.log(count);
+  return results.sort().join("\n");
 }
 
 function App() {
