@@ -1,24 +1,144 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from "react";
+import "@fontsource/roboto";
+import "./App.css";
+import {
+  Box,
+  Button,
+  Container,
+  CssBaseline,
+  Divider,
+  Grid,
+  TextField,
+  Typography,
+} from "@material-ui/core";
+
+const groupRegex = /^(.+?)(-(.))?$/gm;
+
+function getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function doRandomize(groups: string, themes: string) {
+  const parsedGroups = groups.matchAll(groupRegex);
+  const parsedThemes = themes.split("\n");
+
+  const groupsAlreadyAssigned: Record<string, Set<string>> = {};
+
+  const results: string[] = [];
+  let currentSet = [...parsedThemes];
+  for (const group of parsedGroups) {
+    groupsAlreadyAssigned[group[0]] =
+      groupsAlreadyAssigned[group[0]] ?? new Set();
+
+    if (currentSet.length === 0) currentSet = [...parsedThemes];
+    let success = false;
+    while (!success) {
+      const assigned = currentSet.splice(
+        getRandomInt(0, currentSet.length - 1),
+        1
+      )[0];
+
+      if (!groupsAlreadyAssigned[group[0]].has(assigned)) success = true;
+      else {
+        currentSet.push(assigned);
+        continue;
+      }
+
+      results.push(`${group[0]} ${assigned}`);
+      groupsAlreadyAssigned[group[0]].add(assigned);
+    }
+  }
+  return results.join("\n");
+}
 
 function App() {
+  const [value, setValue] = useState<string>();
+  const [groups, setGroups] = useState<string>("");
+  const [themes, setThemes] = useState<string>("");
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <CssBaseline />
+      <Container>
+        <Box margin={2}>
+          <Box margin={3}>
+            <Grid item xs={12}>
+              <Typography
+                variant="h3"
+                align="center"
+                component="h1"
+                gutterBottom
+              >
+                SHEC Theme Randomizer
+              </Typography>
+            </Grid>
+          </Box>
+          <Grid item xs={12}>
+            <Box mb={5}>
+              <Divider />
+            </Box>
+          </Grid>
+          <Grid container spacing={2}>
+            <Grid container item xs={6}>
+              <TextField
+                label="Themes"
+                value={themes}
+                onChange={(e) => setThemes(e.currentTarget.value)}
+                multiline
+                rows={10}
+                variant="outlined"
+                fullWidth
+              />
+            </Grid>
+            <Grid container item xs={6}>
+              <TextField
+                label="Groups"
+                value={groups}
+                onChange={(e) => setGroups(e.currentTarget.value)}
+                multiline
+                rows={10}
+                variant="outlined"
+                fullWidth
+              />
+            </Grid>
+            <Grid container item xs={12}>
+              <Button
+                variant="contained"
+                onClick={() => setValue(doRandomize(groups, themes))}
+                color="primary"
+                size="large"
+              >
+                Randomize
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+        {value ? (
+          <React.Fragment>
+            <Box margin={2} mt={4}>
+              <Divider />
+            </Box>
+            <Box margin={2} mt={3}>
+              <Typography
+                variant="h4"
+                align="center"
+                component="h1"
+                gutterBottom
+              >
+                Results
+              </Typography>
+              <TextField
+                multiline
+                variant="outlined"
+                value={value}
+                fullWidth
+              ></TextField>
+            </Box>
+          </React.Fragment>
+        ) : null}
+      </Container>
     </div>
   );
 }
